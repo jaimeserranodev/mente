@@ -2,7 +2,7 @@
   "name": "Mente — Segundo Cerebro",
   "short_name": "Mente",
   "description": "Captura ideas, tareas y proyectos al instante",
-  "start_url": "https://jaimeserranodev.github.io/mente/",
+  "start_url": "/mente/",
   "display": "standalone",
   "background_color": "#F7F4EE",
   "theme_color": "#F7F4EE",
