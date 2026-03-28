@@ -116,6 +116,40 @@
   }
   .btn-new:hover{opacity:.85}
 
+  /* ── AREA TABS ── */
+  .area-bar{
+    display:flex;align-items:center;gap:6px;
+    padding:12px 32px 0;background:var(--bg);
+    border-bottom:1px solid var(--line);
+    overflow-x:auto;scrollbar-width:none;flex-shrink:0;
+  }
+  .area-bar::-webkit-scrollbar{display:none}
+  .area-tab{
+    padding:8px 16px;border-radius:7px 7px 0 0;border:none;background:none;
+    font-family:var(--body);font-size:13px;color:var(--ink3);
+    cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;
+    transition:color .15s,border-color .15s;margin-bottom:-1px;
+  }
+  .area-tab:hover{color:var(--ink2)}
+  .area-tab.active{color:var(--ink);font-weight:500;border-bottom-color:var(--ink)}
+
+  /* area accent colors */
+  .area-tab[data-area="Mindset"].active{color:#7060A8;border-bottom-color:#7060A8}
+  .area-tab[data-area="Finanzas"].active{color:#4A8C6E;border-bottom-color:#4A8C6E}
+  .area-tab[data-area="Bienestar"].active{color:#C49A3C;border-bottom-color:#C49A3C}
+  .area-tab[data-area="Pasiones"].active{color:#A05050;border-bottom-color:#A05050}
+  .area-tab[data-area="Relaciones"].active{color:#4A7A9B;border-bottom-color:#4A7A9B}
+
+  .area-pill{
+    display:inline-block;font-size:10px;letter-spacing:.06em;
+    padding:2px 7px;border-radius:3px;font-weight:500;margin-top:4px;
+  }
+  .area-Mindset{background:#F0EDF8;color:#7060A8}
+  .area-Finanzas{background:#EBF4EF;color:#4A8C6E}
+  .area-Bienestar{background:#FBF5E4;color:#C49A3C}
+  .area-Pasiones{background:#F8EDED;color:#A05050}
+  .area-Relaciones{background:#E8F2F8;color:#4A7A9B}
+
   /* ── CONTENT AREA ── */
   .content-area{flex:1;overflow-y:auto;padding:24px 32px 60px}
 
@@ -325,6 +359,8 @@
     .mob-bar{display:flex}
     .topbar{display:none}
     .content-area{padding:16px 16px 80px}
+    .area-bar{padding:10px 16px 0;gap:4px}
+    .area-tab{padding:6px 12px;font-size:12px}
     .cards-grid{grid-template-columns:1fr}
     .field-row{grid-template-columns:1fr}
     .type-selector{grid-template-columns:repeat(2,1fr)}
@@ -416,6 +452,15 @@
     <button class="btn-new" id="btnNew">+ Capturar</button>
   </div>
 
+  <div class="area-bar" id="areaBar">
+    <button class="area-tab active" data-area="">Todas</button>
+    <button class="area-tab" data-area="Mindset">Mindset</button>
+    <button class="area-tab" data-area="Finanzas">Finanzas</button>
+    <button class="area-tab" data-area="Bienestar">Bienestar</button>
+    <button class="area-tab" data-area="Pasiones">Pasiones</button>
+    <button class="area-tab" data-area="Relaciones">Relaciones</button>
+  </div>
+
   <div class="content-area" id="contentArea"></div>
 </main>
 </div>
@@ -459,6 +504,17 @@
           <label>Contexto / Por qué importa (opcional)</label>
           <textarea id="idea-context" placeholder="¿De dónde vino esta idea? ¿Para qué sirve?" rows="2"></textarea>
         </div>
+        <div class="field">
+          <label>Área</label>
+          <select id="idea-area">
+            <option value="">Sin área</option>
+            <option value="Mindset">Mindset</option>
+            <option value="Finanzas">Finanzas</option>
+            <option value="Bienestar">Bienestar</option>
+            <option value="Pasiones">Pasiones</option>
+            <option value="Relaciones">Relaciones</option>
+          </select>
+        </div>
       </div>
 
       <!-- TAREA fields -->
@@ -485,6 +541,17 @@
           <label>Notas adicionales</label>
           <textarea id="tarea-notes" placeholder="Contexto, pasos, referencias…" rows="2"></textarea>
         </div>
+        <div class="field">
+          <label>Área</label>
+          <select id="tarea-area">
+            <option value="">Sin área</option>
+            <option value="Mindset">Mindset</option>
+            <option value="Finanzas">Finanzas</option>
+            <option value="Bienestar">Bienestar</option>
+            <option value="Pasiones">Pasiones</option>
+            <option value="Relaciones">Relaciones</option>
+          </select>
+        </div>
       </div>
 
       <!-- PROYECTO fields -->
@@ -496,6 +563,17 @@
         <div class="field">
           <label>Descripción / Objetivo</label>
           <textarea id="proy-desc" placeholder="¿Qué quieres conseguir con este proyecto?" rows="2"></textarea>
+        </div>
+        <div class="field">
+          <label>Área</label>
+          <select id="proy-area">
+            <option value="">Sin área</option>
+            <option value="Mindset">Mindset</option>
+            <option value="Finanzas">Finanzas</option>
+            <option value="Bienestar">Bienestar</option>
+            <option value="Pasiones">Pasiones</option>
+            <option value="Relaciones">Relaciones</option>
+          </select>
         </div>
         <div class="field">
           <label>Subtareas</label>
@@ -556,6 +634,7 @@ let searchQ = '';
 let capType = 'idea';
 let capSubtasks = []; // for new proyecto
 let detailId = null;
+let activeArea = '';
 
 function load(){
   try{ entries = JSON.parse(localStorage.getItem(KEY)) || []; }
@@ -597,6 +676,7 @@ function getFiltered(){
     else if(activeFilter==='done') matchFilter = e.type==='tarea' && e.status==='done';
 
     if(!matchFilter) return false;
+    if(activeArea && ['idea','tarea','proyecto'].includes(e.type) && e.area !== activeArea) return false;
     if(!searchQ) return true;
     const q = searchQ.toLowerCase();
     const searchable = [e.text, e.title, e.context, e.notes, e.desc,
@@ -706,7 +786,8 @@ function buildCard(e){
     if(body && body!==title) inner += `<div class="nota-preview truncate">${esc(body)}</div>`;
   }
 
-  inner += `<div class="card-footer"><span class="card-date">${fmtTime(e.created)}</span></div>`;
+  const areaPill = (e.area && e.type!=='nota') ? `<span class="area-pill area-${e.area}">${e.area}</span>` : '';
+  inner += `<div class="card-footer"><span class="card-date">${fmtTime(e.created)}</span>${areaPill}</div>`;
   div.innerHTML = inner;
 
   // Events
@@ -744,6 +825,15 @@ function openDetail(id){
         <textarea id="det-idea-text" rows="3">${esc(e.text||'')}</textarea></div>
       <div class="field"><label>Contexto</label>
         <textarea id="det-idea-context" rows="2">${esc(e.context||'')}</textarea></div>
+      <div class="field"><label>Área</label>
+        <select id="det-idea-area">
+          <option value="">Sin área</option>
+          <option value="Mindset" ${e.area==='Mindset'?'selected':''}>Mindset</option>
+          <option value="Finanzas" ${e.area==='Finanzas'?'selected':''}>Finanzas</option>
+          <option value="Bienestar" ${e.area==='Bienestar'?'selected':''}>Bienestar</option>
+          <option value="Pasiones" ${e.area==='Pasiones'?'selected':''}>Pasiones</option>
+          <option value="Relaciones" ${e.area==='Relaciones'?'selected':''}>Relaciones</option>
+        </select></div>
       <div style="margin-top:8px">
         <button class="btn-convert" id="btnConvert">◈ Convertir en Proyecto</button>
       </div>`;
@@ -769,7 +859,16 @@ function openDetail(id){
           <input type="date" id="det-tarea-due" value="${e.due||''}"/></div>
       </div>
       <div class="field"><label>Notas</label>
-        <textarea id="det-tarea-notes" rows="3">${esc(e.notes||'')}</textarea></div>`;
+        <textarea id="det-tarea-notes" rows="3">${esc(e.notes||'')}</textarea></div>
+      <div class="field"><label>Área</label>
+        <select id="det-tarea-area">
+          <option value="">Sin área</option>
+          <option value="Mindset" ${e.area==='Mindset'?'selected':''}>Mindset</option>
+          <option value="Finanzas" ${e.area==='Finanzas'?'selected':''}>Finanzas</option>
+          <option value="Bienestar" ${e.area==='Bienestar'?'selected':''}>Bienestar</option>
+          <option value="Pasiones" ${e.area==='Pasiones'?'selected':''}>Pasiones</option>
+          <option value="Relaciones" ${e.area==='Relaciones'?'selected':''}>Relaciones</option>
+        </select></div>`;
     renderDetStatusCycle(e.status||'pending');
   }
 
@@ -782,6 +881,15 @@ function openDetail(id){
         <input type="text" id="det-proy-name" value="${esc(e.text||e.title||'')}"/></div>
       <div class="field"><label>Descripción</label>
         <textarea id="det-proy-desc" rows="2">${esc(e.desc||'')}</textarea></div>
+      <div class="field"><label>Área</label>
+        <select id="det-proy-area">
+          <option value="">Sin área</option>
+          <option value="Mindset" ${e.area==='Mindset'?'selected':''}>Mindset</option>
+          <option value="Finanzas" ${e.area==='Finanzas'?'selected':''}>Finanzas</option>
+          <option value="Bienestar" ${e.area==='Bienestar'?'selected':''}>Bienestar</option>
+          <option value="Pasiones" ${e.area==='Pasiones'?'selected':''}>Pasiones</option>
+          <option value="Relaciones" ${e.area==='Relaciones'?'selected':''}>Relaciones</option>
+        </select></div>
       ${subs.length ? `<div class="proyecto-progress">
         <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
         <div class="progress-label"><span>${done}/${subs.length} completadas</span><span>${pct}%</span></div>
@@ -870,6 +978,7 @@ function saveDetail(){
   if(e.type==='idea'){
     e.text = document.getElementById('det-idea-text').value;
     e.context = document.getElementById('det-idea-context').value;
+    e.area = document.getElementById('det-idea-area').value;
   }
   if(e.type==='tarea'){
     e.text = document.getElementById('det-tarea-text').value;
@@ -882,11 +991,13 @@ function saveDetail(){
     e.priority = document.getElementById('det-tarea-pri').value;
     e.due = document.getElementById('det-tarea-due').value;
     e.notes = document.getElementById('det-tarea-notes').value;
+    e.area = document.getElementById('det-tarea-area').value;
   }
   if(e.type==='proyecto'){
     e.text = document.getElementById('det-proy-name').value;
     e.title = e.text;
     e.desc = document.getElementById('det-proy-desc').value;
+    e.area = document.getElementById('det-proy-area').value;
   }
   if(e.type==='nota'){
     e.title = document.getElementById('det-nota-title').value;
@@ -926,7 +1037,7 @@ function openCapture(preType){
   capType = preType||'idea';
   selectCapType(capType);
   // clear fields
-  ['idea-text','idea-context','tarea-text','tarea-notes','nota-title','nota-body','proy-name','proy-desc'].forEach(id=>{
+  ['idea-text','idea-context','tarea-text','tarea-notes','nota-title','nota-body','proy-name','proy-desc','idea-area','tarea-area','proy-area'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   const due=document.getElementById('tarea-due'); if(due) due.value='';
@@ -953,7 +1064,7 @@ function saveCapture(){
   if(capType==='idea'){
     const text = document.getElementById('idea-text').value.trim();
     if(!text) return alert('Escribe la idea.');
-    createEntry({type:'idea', text, context:document.getElementById('idea-context').value.trim()});
+    createEntry({type:'idea', text, context:document.getElementById('idea-context').value.trim(), area:document.getElementById('idea-area').value});
   }
   if(capType==='tarea'){
     const text = document.getElementById('tarea-text').value.trim();
@@ -962,7 +1073,8 @@ function saveCapture(){
       status:'pending',
       priority:document.getElementById('tarea-pri').value,
       due:document.getElementById('tarea-due').value,
-      notes:document.getElementById('tarea-notes').value.trim()
+      notes:document.getElementById('tarea-notes').value.trim(),
+      area:document.getElementById('tarea-area').value
     });
   }
   if(capType==='proyecto'){
@@ -970,7 +1082,8 @@ function saveCapture(){
     if(!text) return alert('Escribe el nombre del proyecto.');
     createEntry({type:'proyecto', text, title:text,
       desc:document.getElementById('proy-desc').value.trim(),
-      subtasks:[...capSubtasks]
+      subtasks:[...capSubtasks],
+      area:document.getElementById('proy-area').value
     });
   }
   if(capType==='nota'){
@@ -1119,6 +1232,16 @@ document.getElementById('btnDeleteDetail').addEventListener('click',()=>{
 ['modalCapture','modalDetail'].forEach(id=>{
   document.getElementById(id).addEventListener('click',ev=>{
     if(ev.target.id===id) document.getElementById(id).classList.remove('open');
+  });
+});
+
+// Area tabs
+document.querySelectorAll('.area-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.area-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    activeArea = btn.dataset.area;
+    render();
   });
 });
 
